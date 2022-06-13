@@ -19,18 +19,38 @@ var config = {
 };
 axios(config)
     .then(function (response) {
-        getStreem(response.data.access_token) // после получения токена, запускаем крон на получения просмотров
+        getStreem(response.data.access_token) // после получения токена, выбираем нужный стрим
     })
     .catch(function (error) {
         console.log(error);
     });
 
+//получаем список стримов и берем первый из них
 const getStreem = (token) => {
+    var config = {
+        method: 'get',
+        url: 'https://api.twitch.tv/helix/streams',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Client-Id': '91yjam970mpma2jdoj30t0p4pdo35w'
+        },
+    };
+    axios(config)
+        .then(function (response) {
+            getStatistics({ user_id: response.data.data[0].user_id, token: token }) // передаем нужный id стрима и токен, и запускаем крон
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+
+//вытаскиваем статистику из стрима
+const getStatistics = ({ user_id, token }) => {
+    console.log("start")
     cron.schedule('*/1 * * * *', () => {
-        console.log(token, 'running a task every minute');
         var config = {
             method: 'get',
-            url: 'https://api.twitch.tv/helix/streams?user_id=71092938',
+            url: `https://api.twitch.tv/helix/streams?user_id=${user_id}`,
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Client-Id': '91yjam970mpma2jdoj30t0p4pdo35w'
@@ -46,5 +66,7 @@ const getStreem = (token) => {
             .catch(function (error) {
                 console.log(error);
             });
-    });
+
+    })
 }
+
